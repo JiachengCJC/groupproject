@@ -1,0 +1,12 @@
+# Only application source and dependency manifests belong in the build context.
+# Local secrets, data, the project proposal and test output stay on the host.
+**
+!Dockerfile
+!.dockerignore
+!requirements.txt
+!requirements-live.txt
+!requirements-media.txt
+!app/
+!app/**
+**/__pycache__/
+**/*.py[cod]

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Market Lens · Intelligence workspace</title>
+  <meta name="description" content="An evidence-led market intelligence workspace. Analyze business data with four specialists, inspect sources, and review the next move.">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/styles.css?v=0.2.0">
+  <script src="/static/app.js?v=0.2.0" defer></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a href="#analysis" data-view="analysis" class="brand"><img src="/static/favicon.svg" alt="" width="34" height="34"><span>Market Lens<span class="brand-sub">INTELLIGENCE WORKSPACE</span></span></a>
+    <div class="workspace"><span class="workspace-icon">04</span><div>Group 4 <small>DSA2111 · Research prototype</small></div><span class="workspace-arrow">⌄</span></div>
+    <p class="nav-label">WORKSPACE</p>
+    <nav aria-label="Main navigation">
+      <button class="nav-item active" data-view="analysis"><span class="nav-icon">◈</span> Analysis studio <span class="nav-arrow">↗</span></button>
+      <button class="nav-item" data-view="sources"><span class="nav-icon">▤</span> Knowledge base <span class="nav-count" id="source-count">—</span></button>
+      <button class="nav-item" data-view="history"><span class="nav-icon">◷</span> Review history</button>
+      <button class="nav-item" data-view="evaluation"><span class="nav-icon">⌁</span> Evaluation</button>
+    </nav>
+    <div class="side-method"><div class="mini-orbit"><i></i><i></i><i></i><i></i><b>✦</b></div><h3>Four perspectives.<br>One informed decision.</h3><p>Bring your numbers and context into the same conversation.</p></div>
+    <div class="sidebar-foot"><span class="status-dot"></span> Local workspace <span class="version">MVP 0.2</span></div>
+  </aside>
+  <div class="shell">
+    <header class="topbar"><div><span class="muted">Workspace</span><span class="slash">/</span><span id="page-breadcrumb">Analysis studio</span></div><div class="top-meta"><span class="pill subtle">Human review required</span><span class="avatar" aria-label="Group 4">G4</span></div></header>
+    <main id="main">
+      <section id="view-analysis" class="view">
+        <div class="page-heading"><div><p class="eyebrow">FROM EVIDENCE TO ACTION</p><h1>Make your next move clearer.</h1><p class="subtitle">Ask a business question. Let four specialists connect the dots.</p></div><span class="page-number">01 <span>/ ANALYZE</span></span></div>
+        <div class="studio-grid">
+          <div class="query-panel panel">
+            <div class="panel-eyebrow"><span class="accent">✦</span> YOUR QUESTION <span class="pill" id="data-mode-label">Synthetic demo data</span></div>
+            <form id="analysis-form">
+              <label class="sr-only" for="question">Business question</label><textarea id="question" maxlength="2000" minlength="8" required placeholder="What should we prioritize, and what does the evidence tell us?"></textarea>
+              <div class="query-toolbar"><div class="dataset-picker"><span class="tiny-label">ANALYSIS SCOPE</span><label for="dataset" class="sr-only">Dataset or documents only</label><select id="dataset"></select></div><button id="run-button" class="button primary" type="submit">Run analysis <span>↗</span></button></div>
+              <details class="document-picker"><summary>Select documents <span id="document-selection-count">Automatic dataset context</span></summary><p class="help">Select specific documents to narrow the evidence. Documents-only analysis requires at least one selection.</p><div id="analysis-documents"></div></details><details class="mode-details"><summary>Analysis settings <span id="mode-summary">Local agents · baseline scoring</span></summary><div class="mode-grid"><label>Specialists<select id="agent-mode"><option value="local">Local analytical baseline</option><option value="ollama">Ollama · local model</option><option value="live">OpenAI · API model</option></select></label><label>Decision engine<select id="decision-mode"><option value="baseline">Transparent rule-based scores</option><option value="llm">Model recommendation</option><option value="jev">JEV probabilities</option></select></label><label id="ollama-model-field" class="hidden">Ollama model<select id="ollama-model"></select></label></div><button id="refresh-models" type="button" class="button secondary">Refresh local models</button><p id="provider-note" class="help"></p><p class="help">Baseline mode uses fixed queries and rules. Ollama processes selected evidence with a local model. OpenAI sends selected evidence to the configured API. Choose Model recommendation for document analysis.</p></details>
+            </form>
+          </div>
+          <aside class="team-panel"><div class="team-heading"><span class="tiny-label">YOUR ANALYST TEAM</span><span class="team-count">4 SPECIALISTS</span></div><div id="team-list"></div><div class="team-foot"><span class="status-dot"></span><span id="team-status">Ready when you are</span></div></aside>
+        </div>
+        <div class="scenarios-heading"><span class="tiny-label">START WITH A SCENARIO</span><span class="help">Five synthetic business cases, ready to explore</span></div><div id="scenario-list" class="scenario-list"></div>
+        <div id="progress" class="progress-panel hidden" role="status" aria-live="polite"></div>
+        <div id="results" aria-live="polite">
+          <div class="empty-result"><div class="empty-mark"><span></span><span></span><span></span><i>↗</i></div><div><h2>Your evidence. A defensible next step.</h2><p>Run an analysis to see the recommendation, competing actions,<br>source-level evidence and a reviewable decision trail.</p></div><div class="empty-steps"><span>01 <b>Analyze</b></span><i>→</i><span>02 <b>Inspect</b></span><i>→</i><span>03 <b>Review</b></span></div></div>
+        </div>
+      </section>
+      <section id="view-sources" class="view hidden">
+        <div class="page-heading"><div><p class="eyebrow">THE EVIDENCE BEHIND THE ANSWER</p><h1>Your knowledge base.</h1><p class="subtitle">Structured data and document context, connected by dataset.</p></div><a class="button secondary" href="/api/sample.csv" download>↓ Sample CSV</a></div>
+        <div class="source-layout"><section class="panel source-list-panel"><div class="section-heading"><h2>Connected sources</h2><span id="source-summary" class="help"></span></div><div id="sources-list"></div></section><div class="import-stack">
+          <form class="panel import-form" id="file-form"><span class="tiny-label">DOCUMENTS &amp; DATA</span><h2>Upload your files</h2><p class="help">PDF, Word, Excel, PowerPoint, images, text, email and archives. Up to 25 MB per file. Tables become queryable datasets; documents keep their original sources.</p><label>Files<input id="upload-files" type="file" multiple required></label><label>Applies to<select id="upload-dataset"></select></label><label>Category<select id="upload-category"><option>General</option><option>Customer research</option><option>Competitive intelligence</option><option>Product &amp; quality</option><option>Market research</option><option>Internal policy</option><option>Operations</option></select></label><label>Image / scanned page conversion<select id="vision-provider"><option value="none">Local OCR · no model required</option><option value="ollama">Ollama vision model · local</option><option value="live">OpenAI vision · API</option></select></label><label id="vision-model-field" class="hidden">Vision model<select id="vision-model"></select></label><p class="help">Model-assisted conversion sends images only to the selected provider. Use a vision-capable model for photos and charts.</p><button class="button primary" type="submit">Upload &amp; process <span>+</span></button><div id="upload-results" aria-live="polite"></div></form>
+          <form class="panel import-form" id="csv-form"><span class="tiny-label">STRUCTURED DATA</span><h2>Import a CSV</h2><p class="help">Up to 2 MB or 10,000 rows. Column types are inferred automatically.</p><label>Dataset name<input id="csv-name" required maxlength="120" placeholder="e.g. Quarterly product sales"></label><label class="file-label">CSV file<input id="csv-file" type="file" accept=".csv,text/csv" required></label><button class="button primary" type="submit">Import dataset <span>+</span></button><p class="help">For local scoring, follow the sample schema. Live agents can analyze other schemas.</p></form>
+          <form class="panel import-form" id="document-form"><span class="tiny-label">UNSTRUCTURED CONTEXT</span><h2>Add a document</h2><label>Title<input id="doc-title" required maxlength="160" placeholder="e.g. Competitor pricing brief"></label><label>Applies to<select id="doc-dataset"></select></label><label>Source or URL<input id="doc-source" maxlength="500" placeholder="e.g. Internal SOP, October 2026"></label><label>Text or Markdown file (optional)<input id="doc-file" type="file" accept=".txt,.md,text/plain,text/markdown"></label><label>Document text<textarea id="doc-content" rows="5" required maxlength="2000000" placeholder="Paste an article, customer research, or business policy…"></textarea></label><button class="button primary" type="submit">Add to knowledge base <span>+</span></button></form>
+        </div></div>
+      </section>
+      <section id="view-history" class="view hidden"><div class="page-heading"><div><p class="eyebrow">A TRACEABLE DECISION RECORD</p><h1>Review history.</h1><p class="subtitle">Every analysis, its evidence, and the person who reviewed it.</p></div><button class="button secondary" id="refresh-history">↻ Refresh</button></div><div class="panel" id="history-list"></div></section>
+      <section id="view-evaluation" class="view hidden"><div class="page-heading"><div><p class="eyebrow">MEASURE BEFORE YOU TRUST</p><h1>Evaluate the workflow.</h1><p class="subtitle">Repeatable checks for five synthetic business scenarios.</p></div><button class="button primary" id="run-benchmark">Run benchmark <span>↗</span></button></div><div class="notice"><b>A regression suite, not a real-world accuracy claim.</b> These cases helped define the local scoring rules. They test the pipeline and expected behavior; they do not measure JEV calibration, causal validity, or out-of-sample performance.</div><div id="benchmark-results" class="benchmark-results"></div></section>
+      <footer class="page-footer"><span>MARKET LENS <b>·</b> DSA2111 GROUP 4</span><span>Evidence first. Human judgment always.</span></footer>
+    </main>
+  </div>
+  <dialog id="source-dialog"><div class="dialog-heading"><h2 id="dialog-title">Source details</h2><button class="icon-button" id="close-dialog" aria-label="Close source details">×</button></div><div id="dialog-content"></div></dialog>
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+</body>
+</html>

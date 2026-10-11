@@ -1,0 +1,39 @@
+services:
+  market-lens:
+    build:
+      context: .
+      args:
+        INSTALL_MEDIA: ${INSTALL_MEDIA:-0}
+    init: true
+    ports:
+      - "127.0.0.1:${PORT:-8000}:8000"
+    environment:
+      DATABASE_PATH: /app/data/market_lens.sqlite3
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
+      TYPESAFE_API_KEY: ${TYPESAFE_API_KEY:-}
+      JEV_MODEL: ${JEV_MODEL:-jev-latest}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-}
+      OLLAMA_VISION_MODEL: ${OLLAMA_VISION_MODEL:-}
+      OLLAMA_TIMEOUT: ${OLLAMA_TIMEOUT:-180}
+      OLLAMA_CONTEXT: ${OLLAMA_CONTEXT:-8192}
+      OCR_LANGUAGES: ${OCR_LANGUAGES:-eng+chi_sim+chi_tra}
+      WHISPER_MODEL: ${WHISPER_MODEL:-}
+      HF_HOME: /app/data/models/huggingface
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - market-lens-data:/app/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 60s
+    restart: unless-stopped
+
+volumes:
+  market-lens-data:
