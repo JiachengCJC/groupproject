@@ -23,6 +23,7 @@ docker compose ps                 # Container and health status
 docker compose logs -f market-lens # Follow server logs; Ctrl+C stops following
 docker compose restart            # Restart without changing configuration
 docker compose down               # Stop and remove the container; preserve data
+docker compose up -d --wait
 ```
 
 If port 8000 is occupied, create `.env` from `.env.example` if you do not already have one, set `PORT=8001`, and run the same startup command. Then open **http://127.0.0.1:8001**. After editing any `.env` settings, run `docker compose up --build -d --wait` to apply them; `restart` alone does not reload environment values.
