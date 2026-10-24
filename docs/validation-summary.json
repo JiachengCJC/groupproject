@@ -1,0 +1,312 @@
+{
+  "date": "2026-10-24",
+  "backend": {
+    "tests": 143,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "environment": "production Docker image with real isolated PostgreSQL, Qdrant and Ollama; native OCR/Office"
+  },
+  "frontend": {
+    "unit_tests": 6,
+    "mock_browser_tests": 15,
+    "live_browser_workflows": 1,
+    "build": "passed",
+    "lint": "passed"
+  },
+  "model_checks": {
+    "openai": "SQL, RAG, hybrid and Chinese deployed workflow passed",
+    "local": "Qwen2.5:7b SQL and bge-m3/Qdrant RAG passed",
+    "jev": "historical TypeSafe adapter contract-tested; no live credential validation; replaced by OpenAI Decisions in the current update"
+  },
+  "dependency_audit": {
+    "python_locked_packages": 110,
+    "known_vulnerable_packages": 0,
+    "npm_known_vulnerabilities": 0
+  },
+  "limitations": [
+    "synthetic acceptance fixtures; no independent real-business holdout set",
+    "no real team UAT or long-duration capacity benchmark",
+    "cloud HTTPS deployment template only; no public server deployed",
+    "local 7B complex reasoning can abstain after audit failures"
+  ],
+  "scope": "Historical refactor and Decisions/English baselines, followed by separately recorded local profile validation.",
+  "current_update": {
+    "name": "OpenAI Decisions and English-language software",
+    "date": "2026-10-24",
+    "decision_provider": "openai_decisions",
+    "decision_model": "gpt-6-luna",
+    "direct_api_validation": "passed: real HTTP 200 with selected choice, probabilities and confidence",
+    "direct_api_evidence": "output/openai-decisions-api-validation.json",
+    "application_integration": {
+      "baseline_to_decisions": "passed: actual_provider=openai_decisions, protect_margin, valid distribution, approximately 0.432 seconds",
+      "rag_to_decisions_and_rationale": "passed: actual provider confirmed, review_without_credit, probability 0.82, confidence 0.77, approximately 10.51 seconds",
+      "sql": "SQL result and route passed; evidence gate abstained, so not counted as a Decisions API pass",
+      "evidence": [
+        "output/openai-decisions-baseline-validation.json",
+        "output/openai-decisions-rag-validation.json"
+      ]
+    },
+    "regression_suite": {
+      "backend": {
+        "tests": 156,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "environment": "production Docker image; real isolated PostgreSQL, Qdrant/Ollama embeddings, OCR and Office conversion"
+      },
+      "frontend": {
+        "unit_tests": 8,
+        "mock_browser_tests": 18,
+        "build": "passed",
+        "lint": "passed"
+      },
+      "authored_language_audit": "passed: no literal Chinese text in application/frontend sources, docs, configuration templates or tests; original multilingual evidence remains supported"
+    },
+    "compatibility": "Legacy jev requests normalize to openai_decisions for new execution; saved results and approvals remain unchanged.",
+    "deployed_browser_workflow": {
+      "status": "passed",
+      "workflows": 1,
+      "environment": "disposable container and isolated PostgreSQL database on port 8003",
+      "checks": [
+        "setup/login",
+        "actual OpenAI Decisions provider",
+        "validated choice, probabilities and confidence",
+        "source evidence",
+        "approval",
+        "PDF/HTML/JSON exports",
+        "upload and preview",
+        "refresh and session recovery",
+        "English desktop/mobile layout"
+      ],
+      "provider": "openai_decisions",
+      "model": "gpt-6-luna",
+      "choice": "protect_margin",
+      "confidence": 1,
+      "probability_sum": 1,
+      "screenshots": [
+        "frontend/test-results-live/live-analysis-approved.png",
+        "frontend/test-results-live/live-analysis-approved-mobile.png"
+      ]
+    },
+    "local_model_regression": {
+      "status": "passed",
+      "model": "qwen2.5:7b",
+      "case": "synthetic inventory SQL",
+      "elapsed_seconds": 51.271,
+      "checks": [
+        "correct stock/minimum values",
+        "normal model recommendation",
+        "valid references",
+        "expected SQL route"
+      ],
+      "evidence": "output/openai-decisions-local-regression.json"
+    },
+    "reports": {
+      "status": "passed",
+      "pdf_pages": 5,
+      "independent_renderer": "PyMuPDF",
+      "checks": [
+        "English headings and extracted text",
+        "all pages rendered",
+        "opening and closing pages visually inspected",
+        "HTML lang=en and English sections"
+      ]
+    },
+    "deployment": {
+      "url": "http://127.0.0.1:8002",
+      "health": "ok",
+      "database": "postgresql",
+      "application_and_worker": "healthy",
+      "record_counts_preserved": {
+        "users": 0,
+        "datasets": 5,
+        "documents": 5,
+        "runs": 0
+      },
+      "setup_required": true
+    },
+    "scope": "Previously accepted Decisions and English-language release; not the local-profile update."
+  },
+  "latest_update": "local_profiles_update",
+  "local_profiles_update": {
+    "name": "Local Fast, Local Quality and Local Auto",
+    "date": "2026-10-24",
+    "status": "implemented, validated and deployed within the recorded acceptance scope",
+    "hardware": {
+      "chip": "Apple M4",
+      "unified_memory_gib": 16
+    },
+    "model_roles": {
+      "fast": "qwen3.5:4b-q4_K_M",
+      "quality": "qwen3.5:9b-q4_K_M",
+      "vision": "qwen3.5:4b-q4_K_M",
+      "embedding": "bge-m3"
+    },
+    "modes": {
+      "fast": "Fast model for all text stages",
+      "quality": "Quality model for all text stages",
+      "auto": "Fast planner; deterministic workload policy selects the remaining analysis model and records its reason",
+      "custom": "Backward-compatible manual model selection"
+    },
+    "boundary": "Named local profiles require local analysis and local recommendations and reject cloud embeddings; global LOCAL_ONLY also blocks cloud vision and online source synchronization.",
+    "backend_regression": {
+      "status": "passed",
+      "tests": 180,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "elapsed_seconds": 21.008,
+      "environment": "production Docker image; real isolated PostgreSQL analysis role, Qdrant/BGE-M3, OCR and Office conversion",
+      "included_new_profile_tests": 14,
+      "included_new_provider_tests": 10
+    },
+    "frontend_regression": {
+      "status": "passed",
+      "unit_tests": 12,
+      "mock_browser_tests": 27,
+      "build": "passed",
+      "lint": "passed",
+      "live_browser": "passed",
+      "live_browser_workflows": 1
+    },
+    "real_model_checks": {
+      "status": "passed defined fact and routing checks",
+      "cases": 10,
+      "passed": 10,
+      "text_cases": 9,
+      "vision_cases": 1,
+      "retrieval": "lexical; semantic retrieval is checked separately",
+      "elapsed_seconds": {
+        "fast": {
+          "sql": 44.756,
+          "rag": 40.435,
+          "hybrid": 51.723
+        },
+        "quality": {
+          "sql": 76.462,
+          "rag": 72.679,
+          "hybrid": 98.429
+        },
+        "auto": {
+          "sql": 40.884,
+          "rag": 34.953,
+          "hybrid": 90.097
+        }
+      },
+      "auto_routing": {
+        "sql": "4B planner and analysis",
+        "rag": "4B planner and analysis",
+        "hybrid": "4B planner followed by 9B analysis"
+      },
+      "vision": {
+        "status": "passed",
+        "model": "qwen3.5:4b-q4_K_M",
+        "checked_facts": [
+          "product name",
+          "stock units",
+          "minimum required"
+        ]
+      },
+      "scoring_note": {
+        "correction": "The inventory check projects the product, stock and minimum facts using SQL aliases, compares values and row multiplicity with the gold facts, and ignores additional output columns. No model outputs were modified.",
+        "corrected_cases": [
+          "fast/sql",
+          "auto/sql"
+        ],
+        "original_scores": "output/local-profiles-acceptance-original-scores.json"
+      },
+      "limitations": [
+        "Synthetic engineering fixtures, not independent business validation.",
+        "One Quality hybrid query included an unnecessary manual_review literal column; the checked inventory facts and final policy-based approval role were correct. SQL read-only enforcement does not establish semantic correctness of every generated column."
+      ],
+      "evidence": "output/local-profiles-acceptance.json"
+    },
+    "deployed_browser_workflow": {
+      "status": "passed",
+      "workflows": 1,
+      "environment": "final production image in a disposable container with an isolated PostgreSQL database",
+      "profile": "auto",
+      "planner_model": "qwen3.5:4b-q4_K_M",
+      "analysis_model": "qwen3.5:4b-q4_K_M",
+      "model_calls": 4,
+      "workflow_seconds": 48.4,
+      "analysis_seconds": 41.855,
+      "retrieval": "lexical; semantic retrieval validated separately by the Docker integration suite",
+      "checks": [
+        "profile and actual model usage",
+        "policy facts and references",
+        "keyword-retrieval label",
+        "review and approval",
+        "PDF/HTML/JSON exports",
+        "upload",
+        "session recovery",
+        "English desktop/mobile layout"
+      ],
+      "evidence": "output/local-profiles-browser-validation.json"
+    },
+    "deployment": {
+      "status": "deployed",
+      "url": "http://127.0.0.1:8002",
+      "application_and_worker": "healthy",
+      "database": "postgresql",
+      "profiles_available": [
+        "fast",
+        "quality",
+        "auto"
+      ],
+      "required_models_installed": true,
+      "vision_model": "qwen3.5:4b-q4_K_M",
+      "embedding_model": "bge-m3",
+      "retrieval_mode": "hybrid",
+      "thinking": "off",
+      "keep_alive": "0",
+      "record_counts_preserved": {
+        "users": 1,
+        "datasets": 5,
+        "documents": 5,
+        "runs": 1
+      },
+      "existing_account_preserved": true
+    },
+    "limitations": [
+      "Synthetic engineering acceptance does not establish business-outcome accuracy.",
+      "Single-case durations are not capacity or P95 benchmarks; runtime memory varies with workload and context.",
+      "One Quality hybrid SQL query included an unnecessary manual_review literal column; the checked inventory facts and final policy-based approval role were correct. The meaning of every additional output column is not validated by these checks."
+    ],
+    "routing_policy": {
+      "version": "local-profiles-v1",
+      "quality_triggers": [
+        "multiple selected tables",
+        "combined SQL and document evidence",
+        "multiple specialist tasks",
+        "reviewer instructions",
+        "explicit candidate comparison",
+        "additional evidence round"
+      ],
+      "basis": "observed request and plan structure; not model confidence"
+    },
+    "runtime_controls": {
+      "thinking": "off when supported; incompatible controls fail visibly",
+      "generation_token_limit": 2400,
+      "context_tokens": 8192,
+      "keep_alive": "0; unload after generation and embedding calls"
+    },
+    "compatibility": "Missing profile defaults to custom. New profile submissions freeze configured models, installed digests, and thinking/context/output controls; queued execution rejects changed weights or generation controls. Existing approved records remain unchanged.",
+    "report_routing": "Local mode, planner, analysis model and routing reason are included in results and approved HTML/PDF reports. Configured vision and embedding roles are not proof of execution; per-call usage records actual calls.",
+    "title_validation": "Ollama recommendation/alternative titles reaching the schema character limit are rejected and retried for concise wording within the existing call budget; covered by a provider regression.",
+    "reports": {
+      "status": "passed",
+      "pdf_pages": 2,
+      "independent_renderer": "PyMuPDF",
+      "checks": [
+        "every PDF page rendered",
+        "English headings",
+        "actual profile/planner/analysis/routing reason",
+        "complete recommendation title",
+        "first PDF page visually inspected",
+        "HTML lang=en and routing content"
+      ]
+    }
+  }
+}

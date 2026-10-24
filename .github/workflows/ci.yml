@@ -1,0 +1,59 @@
+name: Verify Market Lens
+on: [push, pull_request]
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: ci-database-admin
+          POSTGRES_DB: market_lens
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d market_lens"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements-lock.txt
+      - run: sudo apt-get update -qq && sudo apt-get install -y fonts-wqy-zenhei
+      - name: Create separate application and analytics roles
+        run: sh deploy/postgres-init.sh
+        env:
+          PGHOST: localhost
+          PGPASSWORD: ci-database-admin
+          POSTGRES_USER: postgres
+          POSTGRES_DB: market_lens
+          DATABASE_PASSWORD: ci-application-only
+          ANALYTICS_PASSWORD: ci-analytics-only
+      - run: python -m unittest discover -s tests -v
+        env:
+          TEST_DATABASE_URL: postgresql://market_lens:ci-application-only@localhost:5432/market_lens
+          TEST_ANALYTICS_DATABASE_URL: postgresql://market_lens_analytics:ci-analytics-only@localhost:5432/market_lens
+          TEST_ANALYTICS_ROLE: market_lens_analytics
+          AUTH_ENABLED: 'false'
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build && npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-failure-report
+          path: frontend/playwright-report

@@ -1,0 +1,21 @@
+services:
+  gateway:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?Set your DNS hostname}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on: [market-lens]
+    restart: unless-stopped
+  market-lens:
+    environment:
+      COOKIE_SECURE: "true"
+      ALLOWED_HOSTS: ${SITE_DOMAIN},localhost,127.0.0.1,market-lens
+volumes:
+  caddy-data:
+  caddy-config:

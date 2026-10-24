@@ -36,7 +36,7 @@ class FileTests(unittest.TestCase):
     def test_text_html_json_yaml_xml_rtf_and_gzip(self):
         fixtures = {
             "notes.txt": b"Customer retention requires faster onboarding.",
-            "notes.unknown": "客户流失需要改善服务".encode(),
+            "notes.unknown": "\u5ba2\u6237\u6d41\u5931\u9700\u8981\u6539\u5584\u670d\u52a1".encode(),
             "page.html": b"<script>secret</script><h1>Retention</h1><p>Improve support.</p>",
             "data.json": b'[{"name":"Core","revenue":12},{"name":"Plus","revenue":20}]',
             "data.jsonl": b'{"name":"Core","revenue":12}\n{"name":"Plus","revenue":20}',
@@ -98,12 +98,12 @@ class FileTests(unittest.TestCase):
         self.assertEqual(result["datasets"][0]["row_count"], 1)
 
     def test_cjk_headers_and_retrieval(self):
-        result = ingest(self.db, self.settings, self.providers, "客户.csv", "客户,流失人数\n企业客户,12\n".encode())
+        result = ingest(self.db, self.settings, self.providers, "\u5ba2\u6237.csv", "\u5ba2\u6237,\u6d41\u5931\u4eba\u6570\n\u4f01\u4e1a\u5ba2\u6237,12\n".encode())
         columns = result["datasets"][0]["columns"]
         self.assertEqual(columns[0]["name"], "col_1")
-        self.assertEqual(columns[0]["label"], "客户")
-        d = self.db.add_document("访谈", "客户流失增加，客户反映服务响应时间过长。", "访谈")
-        self.assertTrue(retrieve(self.db, "为什么客户流失增加？", document_ids=[d["id"]]))
+        self.assertEqual(columns[0]["label"], "\u5ba2\u6237")
+        d = self.db.add_document("\u8bbf\u8c08", "\u5ba2\u6237\u6d41\u5931\u589e\u52a0，\u5ba2\u6237\u53cd\u6620\u670d\u52a1\u54cd\u5e94\u65f6\u95f4\u8fc7\u957f。", "\u8bbf\u8c08")
+        self.assertTrue(retrieve(self.db, "\u4e3a\u4ec0\u4e48\u5ba2\u6237\u6d41\u5931\u589e\u52a0？", document_ids=[d["id"]]))
 
     def test_zip_partial_results_and_no_path_extraction(self):
         out = io.BytesIO()

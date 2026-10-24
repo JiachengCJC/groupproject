@@ -1,9 +1,60 @@
+# Local credentials; keep the public configuration template.
 .env
+.env.*
+*.env
+!.env.example
+.envrc
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Local application data, reports, experiment history, and backups.
+/data/
+/output/
+/backups/
+/mlruns/
+/mlartifacts/
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-*
+*.dump
+
+# Python environments, caches, and coverage output.
 .venv/
+venv/
+env/
 __pycache__/
 *.py[cod]
-data/*.sqlite3*
-data/*.db*
-.DS_Store
-output/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
 .coverage
+.coverage.*
+htmlcov/
+
+# Frontend dependencies and generated files; keep package-lock.json.
+node_modules/
+/frontend/dist/
+*.tsbuildinfo
+/frontend/test-results*/
+/frontend/playwright-report*/
+/frontend/blob-report/
+/frontend/playwright/.auth/
+/frontend/coverage/
+
+# Local editor settings, OS metadata, and logs.
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+*.log

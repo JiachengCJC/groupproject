@@ -46,7 +46,8 @@ async function showView(view) {
 }
 function updateMode() {
   const mode=$('#agent-mode').value;
-  $('#mode-summary').textContent=`${({local:'Baseline',live:'OpenAI',ollama:'Ollama'})[mode]} · ${({jev:'JEV scoring',baseline:'rule scoring',llm:'model recommendation'})[$('#decision-mode').value]}`;
+  if($('#decision-mode').value==='openai_decisions' && (state.config?.local_only || !state.config?.openai_decisions_available)) $('#decision-mode').value=mode==='local'?'baseline':'llm';
+  $('#mode-summary').textContent=`${({local:'Baseline',live:'OpenAI',ollama:'Ollama'})[mode]} · ${({openai_decisions:'OpenAI Decisions',baseline:'rule scoring',llm:'model recommendation'})[$('#decision-mode').value]}`;
   $('#ollama-model-field').classList.toggle('hidden',mode!=='ollama');
   $('#decision-mode option[value="llm"]').disabled=mode==='local';
   const ds=state.sources?.datasets.find(d=>d.id===$('#dataset').value);
@@ -150,9 +151,10 @@ function renderTab() {
   const r=state.run.result, d=r.decision;
   if (state.tab==='overview') {
     const modelDecision=['live','ollama'].includes(d.provider);
-    const ranking=Object.entries(d.provider==='jev'?d.probabilities:d.scores||{}).sort((a,b)=>b[1]-a[1]);
-    $('#tab-content').innerHTML=`<div class="decision-grid"><section class="recommendation"><div class="recommendation-top"><span class="tiny-label">RECOMMENDED NEXT STEP</span><span class="decision-icon">↗</span></div><h2>${escapeHTML(d.actions[d.choice].title)}</h2><p>${escapeHTML(r.rationale)}</p><div>${evidenceLinks(r.rationale_evidence_ids)}</div><div class="recommendation-foot"><span>${d.provider==='jev'?'JEV · '+escapeHTML(d.model):modelDecision?escapeHTML(d.provider.toUpperCase()+' · '+d.model):'RULE-BASED BASELINE'}</span><span>${d.provider==='jev'?'Model confidence '+percent(d.confidence):'Human review required'}</span></div></section>
-      <section class="ranking panel"><div class="section-heading"><h3>${modelDecision?'Other options to consider':'Compare the alternatives'}</h3><span class="tiny-label">${d.provider==='jev'?'MODEL PROBABILITY':modelDecision?'UNRANKED OPTIONS':'PRIORITY / 100'}</span></div>${modelDecision?Object.entries(d.actions).filter(([k])=>k!==d.choice).map(([,a])=>`<p class="model-alternative">${escapeHTML(a.title)}</p>`).join('')||'<p class="help">No additional options were proposed.</p>':''}${ranking.map(([k,v])=>`<div class="rank-row ${k===d.choice?'winner':''}"><div><span>${escapeHTML(d.actions[k].title)}</span><b>${d.provider==='jev'?percent(v):fmt(v)}</b></div><div class="bar"><i style="width:${Math.max(0,Math.min(100,d.provider==='jev'?v*100:v))}%"></i></div></div>`).join('')}<p class="help">${d.provider==='jev'?'Probabilities describe the model’s choice among these options, not the chance of business success.':modelDecision?'The model explains its recommendation using cited evidence. No numerical confidence or success probability is assigned.':'Transparent heuristic scores. They are not probabilities and do not sum to 100.'}</p></section></div>`;
+    const probabilistic=['openai_decisions','jev'].includes(d.provider);
+    const ranking=Object.entries((probabilistic?d.probabilities:d.scores)||{}).sort((a,b)=>b[1]-a[1]);
+    $('#tab-content').innerHTML=`<div class="decision-grid"><section class="recommendation"><div class="recommendation-top"><span class="tiny-label">RECOMMENDED NEXT STEP</span><span class="decision-icon">↗</span></div><h2>${escapeHTML(d.actions[d.choice].title)}</h2><p>${escapeHTML(r.rationale)}</p><div>${evidenceLinks(r.rationale_evidence_ids)}</div><div class="recommendation-foot"><span>${probabilistic?(d.provider==='jev'?'Legacy TypeSafe JEV':'OpenAI Decisions')+' · '+escapeHTML(d.model):modelDecision?escapeHTML(d.provider.toUpperCase()+' · '+d.model):'RULE-BASED BASELINE'}</span><span>${probabilistic?'Model confidence '+percent(d.confidence):'Human review required'}</span></div></section>
+      <section class="ranking panel"><div class="section-heading"><h3>${modelDecision?'Other options to consider':'Compare the alternatives'}</h3><span class="tiny-label">${probabilistic?'MODEL PROBABILITY':modelDecision?'UNRANKED OPTIONS':'PRIORITY / 100'}</span></div>${modelDecision?Object.entries(d.actions).filter(([k])=>k!==d.choice).map(([,a])=>`<p class="model-alternative">${escapeHTML(a.title)}</p>`).join('')||'<p class="help">No additional options were proposed.</p>':''}${ranking.map(([k,v])=>`<div class="rank-row ${k===d.choice?'winner':''}"><div><span>${escapeHTML(d.actions[k].title)}</span><b>${probabilistic?percent(v):fmt(v)}</b></div><div class="bar"><i style="width:${Math.max(0,Math.min(100,probabilistic?v*100:v))}%"></i></div></div>`).join('')}<p class="help">${probabilistic?'Probabilities describe the model’s choice among these options, not the chance of business success.':modelDecision?'The model explains its recommendation using cited evidence. No numerical confidence or success probability is assigned.':'Transparent heuristic scores. They are not probabilities and do not sum to 100.'}</p></section></div>`;
   } else if (state.tab==='agents') {
     $('#tab-content').innerHTML=`<div class="agent-findings">${r.agents.map((a,i)=>`<article class="panel finding"><div class="finding-heading"><span class="agent-icon agent-${a.id}">${specialists[i][3]}</span><div><h3>${escapeHTML(a.name)}</h3><span class="help">${a.tool_calls} tool calls · ${fmt(a.elapsed_ms)} ms</span></div></div>${a.claims.map(c=>`<div class="claim"><p>${escapeHTML(c.text)}</p>${evidenceLinks(c.evidence_ids)}</div>`).join('')}<p class="help">${a.limitations.map(escapeHTML).join(' ')}</p></article>`).join('')}</div>`;
   } else if (state.tab==='evidence') {
@@ -214,12 +216,12 @@ document.addEventListener('click',async event=>{
       if(state.busy) {toast('Wait for the current analysis to finish before opening another.');return;}
       await showView('analysis'); setBusy(true); renderTeam('running'); state.tab='overview';
       await pollRun(button.dataset.run);
-      if(state.run){$('#question').value=state.run.request.question;$('#dataset').value=state.run.request.dataset_id||'';state.documentIds=state.run.request.document_ids||[];$('#ollama-model').value=state.run.request.model||$('#ollama-model').value;$('#agent-mode').value=state.run.request.agent_mode;$('#decision-mode').value=state.run.request.decision_mode;updateMode();}
+      if(state.run){$('#question').value=state.run.request.question;$('#dataset').value=state.run.request.dataset_id||'';state.documentIds=state.run.request.document_ids||[];$('#ollama-model').value=state.run.request.model||$('#ollama-model').value;$('#agent-mode').value=state.run.request.agent_mode;$('#decision-mode').value=(state.run.request.decision_mode==='jev'?'openai_decisions':state.run.request.decision_mode);updateMode();}
     }
     if(button.id==='revise-run') {
       state.parent=state.run.id; $('#question').value=state.run.request.question;
       $('#dataset').value=state.run.request.dataset_id||'';state.documentIds=state.run.request.document_ids||[];$('#ollama-model').value=state.run.request.model||$('#ollama-model').value; $('#agent-mode').value=state.run.request.agent_mode;
-      $('#decision-mode').value=state.run.request.decision_mode; updateMode(); $('#question').focus();
+      $('#decision-mode').value=(state.run.request.decision_mode==='jev'?'openai_decisions':state.run.request.decision_mode); updateMode(); $('#question').focus();
       window.scrollTo({top:0,behavior:'smooth'}); toast('Update the question or data, then run again. Reviewer notes will be included.');
     }
   } catch(err) {setBusy(false);toast(err.message,true);}
@@ -272,7 +274,7 @@ $('#run-benchmark').addEventListener('click',async()=>{
 $('#refresh-history').addEventListener('click',()=>loadHistory().catch(err=>toast(err.message,true)));
 $('#refresh-models').addEventListener('click',()=>refreshModels().catch(err=>toast(err.message,true)));
 $('#agent-mode').addEventListener('change',()=>{
-  $('#decision-mode').value=$('#agent-mode').value==='local'?'baseline':'llm';updateMode();
+  if($('#decision-mode').value!=='openai_decisions') $('#decision-mode').value=$('#agent-mode').value==='local'?'baseline':'llm';updateMode();
 });
 $('#vision-provider').addEventListener('change',()=>$('#vision-model-field').classList.toggle('hidden',$('#vision-provider').value!=='ollama'));
 $('#analysis-documents').addEventListener('change',()=>{
@@ -311,9 +313,9 @@ for(const id of ['dataset','decision-mode'])$('#'+id).addEventListener('change',
 
 async function init() {
   renderTeam();state.config=await api('/config');
-  $('#agent-mode option[value="live"]').disabled=!state.config.live_agents_available;
-  $('#decision-mode option[value="jev"]').disabled=!state.config.jev_available;
-  $('#provider-note').textContent=(state.config.live_agents_available?'Live LLM agents are configured.':'Live agents: configure OPENAI_API_KEY and OPENAI_MODEL in .env.')+' '+(state.config.jev_available?'JEV is configured.':'JEV: configure TYPESAFE_API_KEY.');
+  $('#agent-mode option[value="live"]').disabled=state.config.local_only||!state.config.live_agents_available;
+  $('#decision-mode option[value="openai_decisions"]').disabled=state.config.local_only||!state.config.openai_decisions_available;
+  $('#provider-note').textContent=(state.config.live_agents_available?'Live LLM agents are configured.':'Live agents: configure OPENAI_API_KEY and OPENAI_MODEL in .env.')+' '+(state.config.openai_decisions_available?'OpenAI Decisions is configured.':'OpenAI Decisions uses OPENAI_API_KEY and OPENAI_DECISION_MODEL.');
   $('#scenario-list').innerHTML=state.config.scenarios.map((s,i)=>`<button class="scenario" data-scenario="${s.id}" data-dataset="${s.dataset_id}"><span class="scenario-top"><span>0${i+1}</span><span>${escapeHTML(s.tag)}</span></span><b>${escapeHTML(s.title)}</b><span class="scenario-arrow">↗</span></button>`).join('');
   await refreshModels();await loadSources('demo_pricing');$('#question').value=state.config.scenarios[0].question;
   await showView(location.hash.slice(1)||'analysis');

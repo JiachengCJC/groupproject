@@ -1,39 +1,125 @@
+x-app: &app
+  image: market-lens:1.0
+  build:
+    context: .
+    args:
+      INSTALL_MEDIA: ${INSTALL_MEDIA:-0}
+  init: true
+  environment: &environment
+    DATABASE_URL: postgresql://market_lens:${DATABASE_PASSWORD:?Run python3 scripts/configure.py first}@postgres:5432/market_lens
+    ANALYTICS_DATABASE_URL: postgresql://market_lens_analytics:${ANALYTICS_PASSWORD:?Run python3 scripts/configure.py first}@postgres:5432/market_lens
+    ANALYTICS_ROLE: market_lens_analytics
+    DATABASE_PATH: /app/data/market_lens.sqlite3
+    AUTH_ENABLED: "true"
+    SETUP_TOKEN: ${SETUP_TOKEN:?Run python3 scripts/configure.py first}
+    ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+    ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+    ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,[::1],market-lens}
+    COOKIE_SECURE: ${COOKIE_SECURE:-false}
+    EMBEDDED_WORKER: "false"
+    SEED_DEMO: ${SEED_DEMO:-true}
+    LOCAL_ONLY: ${LOCAL_ONLY:-false}
+    ORCHESTRATION: langgraph
+    OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    OPENAI_MODEL: ${OPENAI_MODEL:-}
+    OPENAI_INPUT_USD_PER_MILLION: ${OPENAI_INPUT_USD_PER_MILLION:--1}
+    OPENAI_OUTPUT_USD_PER_MILLION: ${OPENAI_OUTPUT_USD_PER_MILLION:--1}
+    PRICE_VERSION: ${PRICE_VERSION:-}
+    CLOUD_PROTOCOL: responses
+    OPENAI_DECISION_MODEL: ${OPENAI_DECISION_MODEL:-gpt-6-luna}
+    OPENAI_DECISIONS_INPUT_USD_PER_MILLION: ${OPENAI_DECISIONS_INPUT_USD_PER_MILLION:--1}
+    OPENAI_DECISIONS_PRICE_VERSION: ${OPENAI_DECISIONS_PRICE_VERSION:-}
+    OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+    OLLAMA_MODEL: ${OLLAMA_MODEL:-}
+    OLLAMA_FAST_MODEL: ${OLLAMA_FAST_MODEL:-qwen3.5:4b-q4_K_M}
+    OLLAMA_QUALITY_MODEL: ${OLLAMA_QUALITY_MODEL:-qwen3.5:9b-q4_K_M}
+    OLLAMA_VISION_MODEL: ${OLLAMA_VISION_MODEL:-}
+    OLLAMA_TIMEOUT: ${OLLAMA_TIMEOUT:-180}
+    OLLAMA_CONTEXT: ${OLLAMA_CONTEXT:-8192}
+    OLLAMA_THINKING: ${OLLAMA_THINKING:-off}
+    OLLAMA_NUM_PREDICT: ${OLLAMA_NUM_PREDICT:-2400}
+    OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-0}
+    RETRIEVAL_MODE: ${RETRIEVAL_MODE:-lexical}
+    EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-lexical}
+    EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
+    EMBEDDING_REVISION: ${EMBEDDING_REVISION:-}
+    QDRANT_URL: http://qdrant:6333
+    MLFLOW_TRACKING_URI: http://mlflow:5000
+    TRACE_CONTENT: "false"
+    MLFLOW_DISABLE_AGENT_HINT: "1"
+    ALLOW_EXTERNAL_SOURCES: ${ALLOW_EXTERNAL_SOURCES:-true}
+    SOURCE_ALLOWED_HOSTS: ${SOURCE_ALLOWED_HOSTS:-}
+    MAX_MODEL_CALLS: ${MAX_MODEL_CALLS:-20}
+    MAX_AGENT_STEPS: ${MAX_AGENT_STEPS:-3}
+    ANALYSIS_TIMEOUT: ${ANALYSIS_TIMEOUT:-300}
+    OCR_LANGUAGES: ${OCR_LANGUAGES:-eng+chi_sim+chi_tra}
+    WHISPER_MODEL: ${WHISPER_MODEL:-}
+    HF_HOME: /app/data/models/huggingface
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  volumes:
+    - market-lens-data:/app/data
+  read_only: true
+  tmpfs:
+    - /tmp:size=512m
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  stop_grace_period: 60s
+  restart: unless-stopped
+  depends_on:
+    postgres:
+      condition: service_healthy
+    qdrant:
+      condition: service_started
+    mlflow:
+      condition: service_started
+
 services:
   market-lens:
-    build:
-      context: .
-      args:
-        INSTALL_MEDIA: ${INSTALL_MEDIA:-0}
-    init: true
+    <<: *app
     ports:
       - "127.0.0.1:${PORT:-8000}:8000"
+  worker:
+    <<: *app
+    command: [python, -m, app.worker]
+    healthcheck:
+      test: [CMD, python, -c, "import os; os.kill(1, 0)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  postgres:
+    image: market-lens-postgres:17
+    build:
+      context: ./deploy
+      dockerfile: Postgres.Dockerfile
     environment:
-      DATABASE_PATH: /app/data/market_lens.sqlite3
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      OPENAI_MODEL: ${OPENAI_MODEL:-}
-      TYPESAFE_API_KEY: ${TYPESAFE_API_KEY:-}
-      JEV_MODEL: ${JEV_MODEL:-jev-latest}
-      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-}
-      OLLAMA_VISION_MODEL: ${OLLAMA_VISION_MODEL:-}
-      OLLAMA_TIMEOUT: ${OLLAMA_TIMEOUT:-180}
-      OLLAMA_CONTEXT: ${OLLAMA_CONTEXT:-8192}
-      OCR_LANGUAGES: ${OCR_LANGUAGES:-eng+chi_sim+chi_tra}
-      WHISPER_MODEL: ${WHISPER_MODEL:-}
-      HF_HOME: /app/data/models/huggingface
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      POSTGRES_USER: postgres
+      POSTGRES_DB: market_lens
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run python3 scripts/configure.py first}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:?Run python3 scripts/configure.py first}
+      ANALYTICS_PASSWORD: ${ANALYTICS_PASSWORD:?Run python3 scripts/configure.py first}
     volumes:
-      - market-lens-data:/app/data
-    read_only: true
-    tmpfs:
-      - /tmp
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
-    stop_grace_period: 60s
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U postgres -d market_lens"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+  qdrant:
+    image: qdrant/qdrant:v1.17.0
+    volumes:
+      - qdrant-data:/qdrant/storage
+    restart: unless-stopped
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v3.17.2
+    command: [mlflow, server, --host, 0.0.0.0, --port, "5000", --backend-store-uri, "sqlite:////mlflow/mlflow.db", --artifacts-destination, /mlflow/artifacts, --allowed-hosts, "mlflow:*,localhost:*,127.0.0.1:*"]
+    volumes:
+      - mlflow-data:/mlflow
     restart: unless-stopped
 
 volumes:
   market-lens-data:
+  postgres-data:
+  qdrant-data:
+  mlflow-data:

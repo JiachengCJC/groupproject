@@ -1,0 +1,9 @@
+{$SITE_DOMAIN} {
+    encode zstd gzip
+    reverse_proxy market-lens:8000
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options nosniff
+        Referrer-Policy no-referrer
+    }
+}

@@ -6,7 +6,27 @@
 !requirements.txt
 !requirements-live.txt
 !requirements-media.txt
+!requirements-lock.txt
 !app/
 !app/**
+!frontend/
+!frontend/package.json
+!frontend/package-lock.json
+!frontend/index.html
+!frontend/tsconfig*.json
+!frontend/vite.config.*
+!frontend/src/
+!frontend/src/**
+!frontend/public/
+!frontend/public/**
 **/__pycache__/
 **/*.py[cod]
+# Keep credentials out even if placed inside an included source directory.
+**/.env
+**/.env.*
+**/*.env
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/.DS_Store

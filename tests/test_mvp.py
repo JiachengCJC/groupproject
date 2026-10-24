@@ -178,21 +178,23 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(self.db.run(run_id)["status"], "failed")
         self.assertIsNone(self.db.run(run_id)["result"])
 
-    def test_jev_official_contract_and_probability_validation(self):
-        providers = Providers(Settings(jev_key="test-key"))
+    def test_openai_decisions_official_contract_and_probability_validation(self):
+        providers = Providers(Settings(openai_key="test-key"))
         probabilities = {k: .8 if k == "protect_margin" else .04 for k in ACTIONS}
-        answer = {"type":"choice", "choice":"protect_margin", "probabilities":probabilities, "confidence":.76}
+        answer = {"type":"choice", "name":"next_action", "choice":"protect_margin", "probabilities":[
+            {"value":key,"probability":value} for key,value in probabilities.items()], "confidence":.76}
         response = Mock()
-        response.json.return_value = {"model":"jev-test", "answers":{"next_action":answer}, "usage":{}}
+        response.json.return_value = {"model":"gpt-6-luna", "answers":[answer], "usage":{}}
         with patch("app.providers.httpx.post", return_value=response) as post:
-            result = providers.jev({"question":"Test"}, {k:v["description"] for k,v in ACTIONS.items()})
+            result = providers.openai_decisions({"question":"Test"}, {k:v["description"] for k,v in ACTIONS.items()})
             self.assertEqual(result["choice"], "protect_margin")
-            self.assertEqual(post.call_args.args[0], "https://api.typesafe.ai/v1/systemone")
-            self.assertIn("criteria", post.call_args.kwargs["json"]["questions"]["next_action"])
+            self.assertEqual(result["probabilities"], probabilities)
+            self.assertEqual(post.call_args.args[0], "https://api.openai.com/v1/decisions")
+            self.assertIn("choices", post.call_args.kwargs["json"]["questions"][0])
         for bad in [float("nan"), -.1, 1.2, True]:
-            answer["probabilities"]["protect_margin"] = bad
+            answer["probabilities"][0]["probability"] = bad
             with self.subTest(value=bad), patch("app.providers.httpx.post", return_value=response), self.assertRaises(ProviderError):
-                providers.jev({}, ACTIONS)
+                providers.openai_decisions({}, {k:v["description"] for k,v in ACTIONS.items()})
 
 
 class APITests(unittest.TestCase):
@@ -250,7 +252,7 @@ class APITests(unittest.TestCase):
         self.assertEqual(self.client.get("/api/documents/"+response.json()["id"]).json()["content"], "A useful policy")
 
     def test_missing_keys_and_invalid_input(self):
-        for mode in [{"agent_mode":"live"},{"decision_mode":"jev"}]:
+        for mode in [{"agent_mode":"live"},{"decision_mode":"openai_decisions"}]:
             response = self.client.post("/api/analyses", json={"question":"Analyze business performance", "dataset_id":"demo_pricing", **mode})
             self.assertEqual(response.status_code, 400)
         self.assertEqual(self.client.post("/api/analyses", json={"question":"  ","dataset_id":"demo_pricing"}).status_code, 422)
@@ -275,7 +277,8 @@ class APITests(unittest.TestCase):
         config = self.client.get("/api/config").json()
         self.assertFalse(config["live_agents_available"])
         self.assertNotIn("openai_key", config)
-        self.assertNotIn("jev_key", config)
+        self.assertFalse(config["openai_decisions_available"])
+        self.assertEqual(config["openai_decision_model"], "gpt-6-luna")
 
 
 if __name__ == "__main__":
